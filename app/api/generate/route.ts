@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { replicate } from "@/lib/replicate/client";
 import { MODELS } from "@/lib/replicate/models";
-import { buildPrompt } from "@/lib/replicate/prompt-builder";
+import { buildModelInput, modelInputLabel } from "@/lib/replicate/prompt-builder";
 import type { StyleAttributes } from "@/lib/replicate/prompt-builder";
 import type { CatalogStyle } from "@/lib/catalog/styles";
+
+export const maxDuration = 30;
 
 const DAILY_GENERATION_LIMIT = 20;
 
@@ -19,9 +22,7 @@ export async function POST(request: Request) {
   const body = await request.json() as {
     uploadId: string;
     styleId?: string;
-    freeText?: string;
     attributes?: StyleAttributes;
-    refPhotoUrl?: string;
   };
 
   if (!body.uploadId) {
@@ -37,16 +38,13 @@ export async function POST(request: Request) {
     .gte("created_at", since);
 
   if ((count ?? 0) >= DAILY_GENERATION_LIMIT) {
-    return NextResponse.json(
-      { error: "Daily generation limit reached" },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: "Daily generation limit reached" }, { status: 429 });
   }
 
-  // Fetch upload record to get the source image URL
+  // Fetch upload record to get the storage path
   const { data: upload, error: uploadError } = await supabase
     .from("uploads")
-    .select("public_url")
+    .select("storage_path")
     .eq("id", body.uploadId)
     .eq("user_id", user.id)
     .single();
@@ -55,7 +53,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Upload not found" }, { status: 404 });
   }
 
-  // Resolve catalog style if provided
+  // Signed URL so Replicate can download the private image (valid 1h)
+  const adminClient = createAdminClient();
+  const { data: signedData, error: signedError } = await adminClient.storage
+    .from("uploads")
+    .createSignedUrl(upload.storage_path, 3600);
+
+  if (signedError || !signedData) {
+    return NextResponse.json({ error: "Failed to sign upload URL" }, { status: 500 });
+  }
+  const imageUrl = signedData.signedUrl;
+
+  // Resolve catalog style model mappings if a style was selected
   let catalogStyle: CatalogStyle | undefined;
   if (body.styleId) {
     const { data: style } = await supabase
@@ -65,7 +74,10 @@ export async function POST(request: Request) {
       .single();
 
     if (style) {
-      catalogStyle = {
+      // Re-attach model fields from the TypeScript catalog (source of truth)
+      const { STYLES } = await import("@/lib/catalog/styles");
+      const catalogEntry = STYLES.find((s) => s.slug === style.slug);
+      catalogStyle = catalogEntry ?? {
         slug: style.slug,
         name: style.name,
         category: style.category as CatalogStyle["category"],
@@ -76,22 +88,19 @@ export async function POST(request: Request) {
     }
   }
 
-  const prompt = buildPrompt({
-    catalogStyle,
-    freeText: body.freeText,
-    attributes: body.attributes,
-  });
+  // Build structured model inputs
+  const modelInput = buildModelInput({ catalogStyle, attributes: body.attributes });
+  const promptLabel = modelInputLabel(modelInput);
 
-  // Insert generation row before calling Replicate so we have an ID to return
+  // Insert generation row before calling Replicate
   const { data: generation, error: genError } = await supabase
     .from("generations")
     .insert({
       user_id: user.id,
       upload_id: body.uploadId,
-      prompt,
+      prompt: promptLabel,
       style_id: body.styleId ?? null,
-      ref_photo_url: body.refPhotoUrl ?? null,
-      attributes: (body.attributes ?? null) as import("@/types/database.types").Json | null,
+      attributes: modelInput as unknown as import("@/types/database.types").Json,
       status: "pending",
     })
     .select("id")
@@ -101,25 +110,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create generation" }, { status: 500 });
   }
 
-  // Build webhook URL — skip webhook in local dev (Replicate can't reach localhost)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const isLocal = appUrl.includes("localhost") || appUrl.includes("127.0.0.1");
+  // Derive webhook URL. Use x-forwarded-host so we get the public domain even
+  // when Vercel internally rewrites request.url to a deployment-specific URL.
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost ?? request.headers.get("host") ?? "";
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const origin = host ? `${proto}://${host}` : new URL(request.url).origin;
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
   const webhookUrl = isLocal
     ? undefined
-    : `${appUrl}/api/webhooks/replicate?generationId=${generation.id}`;
+    : `${origin}/api/webhooks/replicate?generationId=${generation.id}`;
+  console.log("[generate] webhook origin:", origin, "isLocal:", isLocal, "webhookUrl:", webhookUrl);
 
   try {
     const prediction = await replicate.predictions.create({
       model: MODELS.haircutChange,
       input: {
-        image: upload.public_url,
-        prompt,
+        input_image: imageUrl,
+        ...modelInput,
       },
       ...(webhookUrl
-        ? {
-            webhook: webhookUrl,
-            webhook_events_filter: ["completed"],
-          }
+        ? { webhook: webhookUrl, webhook_events_filter: ["completed"] }
         : {}),
     });
 
@@ -135,6 +146,6 @@ export async function POST(request: Request) {
       .update({ status: "failed", error_message: String(err) })
       .eq("id", generation.id);
 
-    return NextResponse.json({ error: "Replicate error" }, { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
