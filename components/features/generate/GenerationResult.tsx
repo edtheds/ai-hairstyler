@@ -39,8 +39,8 @@ export function GenerationResult({
           src={signedImageUrl}
           alt="Generated hairstyle"
           fill
+          unoptimized
           className="object-contain"
-          sizes="(max-width: 640px) 100vw, 384px"
         />
       </div>
 
