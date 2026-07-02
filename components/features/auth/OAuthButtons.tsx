@@ -49,7 +49,7 @@ export function OAuthButtons({ redirectTo = "/generate" }: OAuthButtonsProps) {
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${redirectTo}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
       },
     });
   }
