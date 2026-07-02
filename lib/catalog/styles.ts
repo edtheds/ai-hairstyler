@@ -5,10 +5,13 @@ export interface CatalogStyle {
   name: string;
   category: StyleCategory;
   sortOrder: number;
-  // Use {{base}} as a slot for optional free-text appended by the user.
+  // Used by the catalog image generation script (generate-catalog-images.ts)
   promptTemplate: string;
-  // Path in the catalog-previews Supabase bucket.
+  // Path in the catalog-previews Supabase bucket
   previewPath: string;
+  // Structured inputs for flux-kontext-apps/change-haircut
+  modelHaircut?: string;   // haircut enum value
+  modelHairColor?: string; // hair_color enum value
 }
 
 export const STYLES: CatalogStyle[] = [
@@ -20,6 +23,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 10,
     promptTemplate: "buzz cut hairstyle, very short all around, clean and neat{{base}}",
     previewPath: "buzz-cut.jpg",
+    modelHaircut: "Crew Cut",
   },
   {
     slug: "crew-cut",
@@ -28,6 +32,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 20,
     promptTemplate: "crew cut hairstyle, short on sides and back, slightly longer on top{{base}}",
     previewPath: "crew-cut.jpg",
+    modelHaircut: "Crew Cut",
   },
   {
     slug: "fade",
@@ -36,6 +41,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 30,
     promptTemplate: "fade haircut, skin fade on sides, clean taper, short on top{{base}}",
     previewPath: "fade.jpg",
+    modelHaircut: "Mohawk Fade",
   },
   {
     slug: "undercut",
@@ -44,6 +50,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 40,
     promptTemplate: "undercut hairstyle, shaved sides, longer hair on top styled back{{base}}",
     previewPath: "undercut.jpg",
+    modelHaircut: "Undercut",
   },
   {
     slug: "textured-crop",
@@ -52,6 +59,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 50,
     promptTemplate: "textured crop haircut, short messy fringe, choppy layers on top{{base}}",
     previewPath: "textured-crop.jpg",
+    modelHaircut: "Choppy Layers",
   },
   {
     slug: "pixie-cut",
@@ -60,6 +68,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 60,
     promptTemplate: "short pixie cut hairstyle, neatly styled{{base}}",
     previewPath: "pixie-cut.jpg",
+    modelHaircut: "Pixie Cut",
   },
   {
     slug: "bob",
@@ -68,6 +77,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 70,
     promptTemplate: "classic bob haircut, chin length, sleek and straight{{base}}",
     previewPath: "bob.jpg",
+    modelHaircut: "Bob",
   },
 
   // ── Medium ─────────────────────────────────────────────────────────────
@@ -78,6 +88,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 110,
     promptTemplate: "pompadour hairstyle, voluminous swept-back top, short sides{{base}}",
     previewPath: "pompadour.jpg",
+    modelHaircut: "Slicked Back",
   },
   {
     slug: "slick-back",
@@ -86,6 +97,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 120,
     promptTemplate: "slicked back hairstyle, smooth hair combed back, polished look{{base}}",
     previewPath: "slick-back.jpg",
+    modelHaircut: "Slicked Back",
   },
   {
     slug: "side-part",
@@ -94,6 +106,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 130,
     promptTemplate: "side part hairstyle, classic clean parting, neatly combed{{base}}",
     previewPath: "side-part.jpg",
+    modelHaircut: "Side-Parted",
   },
   {
     slug: "lob",
@@ -102,6 +115,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 140,
     promptTemplate: "lob haircut, long bob, shoulder length, polished{{base}}",
     previewPath: "lob.jpg",
+    modelHaircut: "Lob",
   },
   {
     slug: "curtain-bangs",
@@ -110,6 +124,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 150,
     promptTemplate: "curtain bangs with medium length hair, soft parted fringe{{base}}",
     previewPath: "curtain-bangs.jpg",
+    modelHaircut: "Side-Swept Bangs",
   },
   {
     slug: "shag",
@@ -118,6 +133,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 160,
     promptTemplate: "shag haircut, layered medium length hair, feathered ends, effortless{{base}}",
     previewPath: "shag.jpg",
+    modelHaircut: "Shag",
   },
 
   // ── Long ───────────────────────────────────────────────────────────────
@@ -128,6 +144,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 210,
     promptTemplate: "man bun hairstyle, long hair tied up in a bun on top{{base}}",
     previewPath: "man-bun.jpg",
+    modelHaircut: "Top Knot",
   },
   {
     slug: "long-waves",
@@ -136,6 +153,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 220,
     promptTemplate: "long wavy hair, loose beach waves, flowing{{base}}",
     previewPath: "long-waves.jpg",
+    modelHaircut: "Soft Waves",
   },
   {
     slug: "braids",
@@ -144,6 +162,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 230,
     promptTemplate: "box braids hairstyle, medium length, neat partings{{base}}",
     previewPath: "braids.jpg",
+    modelHaircut: "Box Braids",
   },
   {
     slug: "cornrows",
@@ -152,6 +171,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 240,
     promptTemplate: "cornrow braids hairstyle, neat straight-back rows close to scalp{{base}}",
     previewPath: "cornrows.jpg",
+    modelHaircut: "Cornrows",
   },
   {
     slug: "dreadlocks",
@@ -160,6 +180,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 250,
     promptTemplate: "dreadlocks hairstyle, long locs, natural textured{{base}}",
     previewPath: "dreadlocks.jpg",
+    modelHaircut: "Dreadlocks",
   },
 
   // ── Curly ──────────────────────────────────────────────────────────────
@@ -170,6 +191,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 310,
     promptTemplate: "natural curly afro hairstyle, voluminous coils{{base}}",
     previewPath: "curly-afro.jpg",
+    modelHaircut: "Curly",
   },
   {
     slug: "tight-coils",
@@ -178,6 +200,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 320,
     promptTemplate: "tight coily hair, defined small curls, natural texture{{base}}",
     previewPath: "tight-coils.jpg",
+    modelHaircut: "Perm",
   },
   {
     slug: "loose-curls",
@@ -186,6 +209,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 330,
     promptTemplate: "loose curly hair, bouncy defined ringlets, shoulder length{{base}}",
     previewPath: "loose-curls.jpg",
+    modelHaircut: "Curly",
   },
   {
     slug: "curly-fringe",
@@ -194,6 +218,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 340,
     promptTemplate: "short curly hair with curly fringe, textured top, faded sides{{base}}",
     previewPath: "curly-fringe.jpg",
+    modelHaircut: "Curly",
   },
 
   // ── Color ──────────────────────────────────────────────────────────────
@@ -204,6 +229,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 410,
     promptTemplate: "platinum blonde hair color, ice blonde, bright and vibrant{{base}}",
     previewPath: "platinum-blonde.jpg",
+    modelHairColor: "Platinum Blonde",
   },
   {
     slug: "auburn-red",
@@ -212,6 +238,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 420,
     promptTemplate: "auburn red hair color, warm coppery tones{{base}}",
     previewPath: "auburn-red.jpg",
+    modelHairColor: "Auburn",
   },
   {
     slug: "balayage",
@@ -220,6 +247,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 430,
     promptTemplate: "balayage highlights, natural sun-kissed color blend{{base}}",
     previewPath: "balayage.jpg",
+    modelHairColor: "Honey Blonde",
   },
   {
     slug: "jet-black",
@@ -228,6 +256,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 440,
     promptTemplate: "jet black hair color, deep glossy black, sleek{{base}}",
     previewPath: "jet-black.jpg",
+    modelHairColor: "Jet Black",
   },
   {
     slug: "silver-grey",
@@ -236,6 +265,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 450,
     promptTemplate: "silver grey hair color, steel grey, modern and striking{{base}}",
     previewPath: "silver-grey.jpg",
+    modelHairColor: "Silver",
   },
   {
     slug: "pastel-pink",
@@ -244,6 +274,7 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 460,
     promptTemplate: "pastel pink hair color, soft rose pink, dreamy{{base}}",
     previewPath: "pastel-pink.jpg",
+    modelHairColor: "Pink",
   },
   {
     slug: "blue-tones",
@@ -252,5 +283,6 @@ export const STYLES: CatalogStyle[] = [
     sortOrder: 470,
     promptTemplate: "blue hair color, deep ocean blue tones, vibrant{{base}}",
     previewPath: "blue-tones.jpg",
+    modelHairColor: "Blue",
   },
 ];

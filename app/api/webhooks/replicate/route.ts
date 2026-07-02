@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { validateWebhook } from "replicate";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const secret = process.env.REPLICATE_WEBHOOK_SIGNING_SECRET;
   if (!secret) {
@@ -76,12 +78,12 @@ export async function POST(request: Request) {
   }
 
   const imageBuffer = await imageResponse.arrayBuffer();
-  const storagePath = `${generation.user_id}/${generationId}.webp`;
+  const storagePath = `${generation.user_id}/${generationId}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from("generated")
     .upload(storagePath, imageBuffer, {
-      contentType: "image/webp",
+      contentType: "image/jpeg",
       upsert: true,
     });
 

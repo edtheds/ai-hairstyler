@@ -25,7 +25,7 @@ export function GenerationResult({
       const url = await generateSignedDownloadUrl("generated", resultUrl);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "hairstyle.webp";
+      a.download = "hairstyle.jpg";
       a.click();
     } catch {
       toast.error("Download failed");

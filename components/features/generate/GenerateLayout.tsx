@@ -51,14 +51,13 @@ export function GenerateLayout({ styles }: GenerateLayoutProps) {
         body: JSON.stringify({
           uploadId,
           styleId: selectedStyleId,
-          freeText: freeText || undefined,
           attributes,
         }),
       });
 
       if (!res.ok) {
-        const { error } = await res.json() as { error: string };
-        toast.error(error ?? "Generation failed");
+        const body = await res.json() as { error?: string };
+        toast.error(body.error ?? "Generation failed");
         return;
       }
 

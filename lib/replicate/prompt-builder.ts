@@ -1,64 +1,84 @@
 import type { CatalogStyle } from "@/lib/catalog/styles";
 
 export interface StyleAttributes {
-  length: number;      // 0–100
-  curl: number;        // 0–100
-  color: string;       // hex or named color
-  highlight: number;   // 0–100
+  length: number;    // 0–100
+  curl: number;      // 0–100
+  color: string;     // slider color value (see AttributeSliders COLORS)
+  highlight: number; // 0–100 (not used by this model)
 }
 
-function lengthToken(v: number): string {
-  if (v <= 15) return "buzz cut";
-  if (v <= 35) return "short hair";
-  if (v <= 60) return "medium length hair";
-  if (v <= 80) return "shoulder length hair";
-  return "long hair";
+// Maps the slider color pill values to the model's hair_color enum
+const SLIDER_COLOR_MAP: Record<string, string> = {
+  "":               "No change",
+  "blonde":         "Blonde",
+  "brunette":       "Brunette",
+  "jet black":      "Jet Black",
+  "vibrant red":    "Red",
+  "auburn":         "Auburn",
+  "platinum blonde":"Platinum Blonde",
+  "silver grey":    "Silver",
+};
+
+// Maps curl + length sliders to the model's haircut enum
+function sliderToHaircut(length: number, curl: number): string {
+  if (length <= 15) return "Crew Cut";  // very short
+
+  if (curl <= 20) {
+    if (length <= 35) return "Straight";
+    if (length <= 60) return "Bob";
+    return "Straight";
+  }
+  if (curl <= 45) {
+    if (length <= 35) return "Shag";
+    if (length <= 60) return "Lob";
+    return "Soft Waves";
+  }
+  if (curl <= 70) {
+    if (length <= 35) return "Perm";
+    return "Curly";
+  }
+  // coily
+  return "Twist Out";
 }
 
-function curlToken(v: number): string {
-  if (v <= 20) return "straight";
-  if (v <= 45) return "slightly wavy";
-  if (v <= 70) return "curly";
-  return "coily";
+export interface ModelInput {
+  haircut: string;
+  hair_color: string;
+  gender: string;
+  aspect_ratio: string;
+  output_format: string;
 }
 
-function highlightToken(v: number): string {
-  if (v <= 15) return "";
-  if (v <= 50) return "subtle highlights";
-  return "bold highlights";
-}
-
-function attributesToText(attrs: StyleAttributes): string {
-  const parts: string[] = [
-    `${lengthToken(attrs.length)}`,
-    `${curlToken(attrs.curl)} hair`,
-  ];
-  if (attrs.color) parts.push(`${attrs.color} hair color`);
-  const hl = highlightToken(attrs.highlight);
-  if (hl) parts.push(hl);
-  return parts.join(", ");
-}
-
-export interface BuildPromptOptions {
+export interface BuildModelInputOptions {
   catalogStyle?: CatalogStyle;
-  freeText?: string;
   attributes?: StyleAttributes;
 }
 
-export function buildPrompt(options: BuildPromptOptions): string {
-  const { catalogStyle, freeText, attributes } = options;
-
-  // Build the base text from free text and/or attributes
-  const baseParts: string[] = [];
-  if (attributes) baseParts.push(attributesToText(attributes));
-  if (freeText?.trim()) baseParts.push(freeText.trim());
-  const base = baseParts.length > 0 ? `, ${baseParts.join(", ")}` : "";
+export function buildModelInput({ catalogStyle, attributes }: BuildModelInputOptions): ModelInput {
+  let haircut = "No change";
+  let hair_color = "No change";
 
   if (catalogStyle) {
-    return catalogStyle.promptTemplate.replace("{{base}}", base);
+    if (catalogStyle.modelHaircut) haircut = catalogStyle.modelHaircut;
+    if (catalogStyle.modelHairColor) hair_color = catalogStyle.modelHairColor;
+  } else if (attributes) {
+    haircut = sliderToHaircut(attributes.length, attributes.curl);
+    hair_color = SLIDER_COLOR_MAP[attributes.color] ?? "No change";
   }
 
-  // No catalog style — use base text directly
-  const fallback = baseParts.join(", ");
-  return fallback || "natural hairstyle";
+  return {
+    haircut,
+    hair_color,
+    gender: "none",
+    aspect_ratio: "match_input_image",
+    output_format: "jpg",
+  };
+}
+
+// Human-readable summary for audit trail (stored in generations.prompt)
+export function modelInputLabel(input: ModelInput): string {
+  const parts: string[] = [];
+  if (input.haircut !== "No change") parts.push(`Haircut: ${input.haircut}`);
+  if (input.hair_color !== "No change") parts.push(`Color: ${input.hair_color}`);
+  return parts.length > 0 ? parts.join(" | ") : "No change";
 }
